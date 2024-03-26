@@ -18,3 +18,29 @@ resource "aws_instance" "web" {
     Name = "web-server-${count.index}"
   }
 }
+
+resource "aws_elb" "main" {
+  name               = "main-load-balancer"
+  subnets            = [aws_subnet.main.id]
+  security_groups    = [aws_security_group.elb_sg.id]
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  instances          = aws_instance.web[*].id
+}
+
+resource "aws_security_group" "elb_sg" {
+  name        = "allow_all"
+  description = "Allow all inbound traffic"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
